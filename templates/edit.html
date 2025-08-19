@@ -1,0 +1,69 @@
+<!-- ===================================================== -->
+<!-- FILE: templates/edit.html                           -->
+<!-- This version adds a Delete button.                  -->
+<!-- ===================================================== -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Post - Social Genie</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Inter', sans-serif; } </style>
+</head>
+<body class="bg-slate-900 text-gray-200">
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="max-w-2xl w-full bg-slate-800 p-8 rounded-xl shadow-2xl shadow-pink-500/10 border border-pink-500/20">
+            <header class="text-center mb-6">
+                <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-emerald-500">Edit Post</h1>
+            </header>
+            <main>
+                <form action="{{ url_for('update', post_id=post.id) }}" method="POST">
+                    <div class="mb-4">
+                        <label for="post_text" class="block text-sm font-medium text-gray-300">Post Content</label>
+                        <textarea name="post_text" id="post_text" rows="10" class="bg-slate-700 text-gray-200 mt-1 block w-full rounded-md border-slate-600 shadow-sm sm:text-sm">{{ post.text }}</textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label for="hashtags" class="block text-sm font-medium text-gray-300">Hashtags</label>
+                        <input type="text" name="hashtags" id="hashtags" value="{{ post.hashtags }}" class="bg-slate-700 text-gray-200 mt-1 block w-full rounded-md border-slate-600 shadow-sm sm:text-sm">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="label_id" class="block text-sm font-medium text-gray-300">Assign Label</label>
+                        <select name="label_id" id="label_id" class="bg-slate-700 text-gray-200 mt-1 block w-full rounded-md border-slate-600 shadow-sm sm:text-sm">
+                            <option value="">-- No Label --</option>
+                            {% for label in labels %}
+                                <option value="{{ label.id }}" {% if post.label_id == label.id %}selected{% endif %}>
+                                    {{ label.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-6">
+                        <label for="schedule_time" class="block text-sm font-medium text-gray-300">Schedule For (leave blank to make a draft)</label>
+                        <input type="datetime-local" name="schedule_time" id="schedule_time" value="{{ post.scheduled_for.strftime('%Y-%m-%dT%H:%M') if post.scheduled_for else '' }}" class="bg-slate-700 text-gray-200 mt-1 block w-full rounded-md border-slate-600 shadow-sm sm:text-sm">
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <a href="{{ url_for('index') }}" class="text-sm text-gray-400 hover:text-gray-200">Cancel</a>
+                        <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-pink-500 to-emerald-500">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- NEW DELETE BUTTON SECTION -->
+                <div class="mt-6 border-t border-slate-700 pt-4">
+                    <form action="{{ url_for('delete', post_id=post.id) }}" method="POST">
+                         <button type="submit" class="w-full text-sm text-red-400 hover:text-red-300">
+                            Delete this post permanently
+                        </button>
+                    </form>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

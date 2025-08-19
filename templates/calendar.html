@@ -1,0 +1,34 @@
+<!-- ===================================================== -->
+<!-- FILE: templates/calendar.html                       -->
+<!-- This is the new page for the Calendar tab.          -->
+<!-- ===================================================== -->
+
+{% extends "base.html" %}
+{% block title %}Calendar - Social Genie{% endblock %}
+
+{% block content %}
+<div id='calendar' class="bg-white p-4 rounded-lg shadow"></div>
+
+<script>
+    // JavaScript to initialize and configure the calendar
+    document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth', // Start with a month view
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,listWeek'
+            },
+            events: '/api/posts', // Fetch events from our API endpoint
+            eventClick: function(info) {
+                info.jsEvent.preventDefault(); // don't let the browser navigate
+                if (info.event.url) {
+                    window.location.href = info.event.url; // Go to the edit page
+                }
+            }
+        });
+        calendar.render();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,125 @@
+<!-- ===================================================== -->
+<!-- FILE: templates/base.html                           -->
+<!-- This version fixes the invisible star and broken labels page. -->
+<!-- ===================================================== -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Social Genie{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/index.global.min.js'></script>
+    <style> 
+        body { font-family: 'Inter', sans-serif; } 
+        
+        @property --angle {
+          syntax: '<angle>';
+          initial-value: 0deg;
+          inherits: false;
+        }
+
+        @keyframes led-border-spin {
+          to { --angle: 360deg; }
+        }
+
+        @keyframes spin-around {
+          0% { transform: rotate(0deg) translateX(35px) rotate(0deg) scale(1); }
+          50% { transform: rotate(180deg) translateX(35px) rotate(-180deg) scale(0.8); }
+          100% { transform: rotate(360deg) translateX(35px) rotate(-360deg) scale(1); }
+        }
+
+        .led-border {
+            border: 2px solid transparent;
+            background:
+                linear-gradient(to bottom, rgb(30 41 59), rgb(30 41 59)) padding-box,
+                conic-gradient(from var(--angle), #ec4899, #10b981, #ec4899) border-box;
+            animation: led-border-spin 3s linear infinite;
+        }
+
+        .star-orbit {
+            animation: spin-around 4s linear infinite;
+            opacity: 0.8;
+            /* This makes the star visible */
+            color: #fde047; /* A bright yellow color */
+        }
+        
+        .blog-content p, 
+        .blog-content h1, 
+        .blog-content h2, 
+        .blog-content h3, 
+        .blog-content li,
+        .blog-content strong {
+            color: #d1d5db;
+        }
+        .blog-content a {
+            color: #ec4899;
+        }
+
+        :root {
+            --fc-border-color: #374151; --fc-daygrid-event-dot-width: 8px;
+            --fc-list-event-dot-width: 10px; --fc-event-bg-color: #ec4899;
+            --fc-event-border-color: #ec4899; --fc-event-text-color: #ffffff;
+            --fc-page-bg-color: #1f2937; --fc-today-bg-color: rgba(236, 72, 153, 0.15);
+        }
+        .fc-event { cursor: pointer; }
+        .fc-toolbar-title, .fc-button, .fc-daygrid-day-number, .fc-col-header-cell-cushion { color: #d1d5db; }
+        .nav-link-active {
+            background-image: linear-gradient(to right, #ec4899, #10b981);
+            color: #ffffff; border-color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-gray-200">
+
+    <div class="container mx-auto mt-10 mb-10 p-6 max-w-7xl bg-slate-800 rounded-xl shadow-2xl shadow-pink-500/20 led-border">
+        <header class="text-center mb-6 relative">
+            <h1 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-emerald-500 inline-block">
+                <span class="relative">S<span class="absolute top-[-10px] left-[-5px] text-2xl star-orbit">✨</span></span>ocial Genie
+            </h1>
+            <p class="text-gray-400 mt-2">Your AI-Powered Content Assistant</p>
+            {% if current_user.is_authenticated %}
+            <div class="absolute top-0 right-0">
+                <a href="{{ url_for('logout') }}" class="px-4 py-2 border border-slate-600 text-sm font-medium rounded-md shadow-sm text-gray-300 bg-slate-700 hover:bg-slate-600">
+                    Logout
+                </a>
+            </div>
+            {% endif %}
+        </header>
+
+        {% if current_user.is_authenticated %}
+        <div class="mb-6 border-b border-slate-700">
+            <nav class="-mb-px flex space-x-4" aria-label="Tabs">
+                <a href="{{ url_for('index') }}" class="whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm rounded-t-lg
+                    {% if request.endpoint == 'index' %} nav-link-active {% else %} border-transparent text-gray-400 hover:text-gray-200 hover:border-slate-600 {% endif %}">
+                    LinkedIn Genie
+                </a>
+                <a href="{{ url_for('blog') }}" class="whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm rounded-t-lg
+                    {% if request.endpoint == 'blog' %} nav-link-active {% else %} border-transparent text-gray-400 hover:text-gray-200 hover:border-slate-600 {% endif %}">
+                    Blog Genie
+                </a>
+                <a href="{{ url_for('calendar') }}" class="whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm rounded-t-lg
+                    {% if request.endpoint == 'calendar' %} nav-link-active {% else %} border-transparent text-gray-400 hover:text-gray-200 hover:border-slate-600 {% endif %}">
+                    Calendar
+                </a>
+                <a href="{{ url_for('labels') }}" class="whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm rounded-t-lg
+                    {% if request.endpoint == 'labels' %} nav-link-active {% else %} border-transparent text-gray-400 hover:text-gray-200 hover:border-slate-600 {% endif %}">
+                    Manage Labels
+                </a>
+            </nav>
+        </div>
+        {% endif %}
+
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer class="text-center mt-8 pt-4 border-t border-slate-700">
+            <p class="text-xs text-slate-400">Social Genie ✨ Built for Nicola</p>
+        </footer>
+    </div>
+
+</body>
+</html>
