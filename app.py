@@ -1,6 +1,6 @@
 # =====================================================
 # FILE: app.py
-# This version fixes the broken "Manage Labels" page.
+# This version includes the full Gemini API prompts.
 # =====================================================
 
 import os
@@ -204,8 +204,28 @@ def api_posts():
 def generate():
     user_prompt = request.form['prompt']
     api_key = os.getenv("GEMINI_API_KEY")
-    full_prompt = f"..." # Unchanged
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
+    
+    # --- UPDATED PROMPT FOR LINKEDIN POSTS ---
+    full_prompt = f"""
+    Act as a "Systems Architect" and expert in business automation for small businesses. Your target audience is overwhelmed entrepreneurs who are looking to scale their operations and free up their time.
+    Your task is to create 5 distinct LinkedIn posts based on the following topic: "{user_prompt}".
+    Each post must adhere to the following structure and guidelines:
+    - Tone: Professional, authoritative, and helpful, but with a human touch. Avoid overly technical jargon. Be friendly, informative, conversational, and engaging to encourage comments and reactions.
+    - Structure:
+      1. A compelling hook: Start with a question or a bold statement that addresses a common pain point of the target audience.
+      2. A value-driven body: Use bullet points to provide actionable tips, a case study, or a "before and after" scenario.
+      3. A clear call to action: End with a question to encourage engagement or an invitation to connect.
+    - Content: The 5 posts should be unique and cover different angles of the topic. For example:
+      - Post 1: A "why" post, explaining the strategic importance of the topic.
+      - Post 2: A "how-to" post, with actionable tips.
+      - Post 3: A case study, showcasing a real-world example.
+      - Post 4: A myth-busting post, addressing a common misconception.
+      - Post 5: A personal reflection, sharing your own experience with the topic.
+    - Hashtags: Include 3-5 relevant hashtags at the end of each post, such as #businessautomation, #systemsarchitect, #entrepreneurship, #smallbusinessowner, #efficiency.
+    Please provide the 5 LinkedIn posts in a clean, ready-to-post format, separated by '---'.
+    """
+    
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={api_key}"
     payload = {"contents": [{"parts": [{"text": full_prompt}]}]}
     response = requests.post(url, json=payload)
     if response.status_code == 200:
@@ -219,8 +239,20 @@ def generate():
                 for post_content in individual_posts:
                     if post_content.strip():
                         parts = post_content.strip().split('\n')
-                        post_text = "\n".join(parts[:-1]).strip()
-                        hashtags = parts[-1].strip()
+                        # Find the last line that starts with '#' for hashtags
+                        hashtag_line_index = -1
+                        for i in range(len(parts) - 1, -1, -1):
+                            if parts[i].strip().startswith('#'):
+                                hashtag_line_index = i
+                                break
+                        
+                        if hashtag_line_index != -1:
+                            post_text = "\n".join(parts[:hashtag_line_index]).strip()
+                            hashtags = " ".join(parts[hashtag_line_index:]).strip()
+                        else: # Fallback if no hashtags are found
+                            post_text = "\n".join(parts).strip()
+                            hashtags = ""
+                            
                         cur.execute("INSERT INTO posts (post_text, hashtags, status, user_id) VALUES (%s, %s, 'draft', %s);", (post_text, hashtags, current_user.id))
                 conn.commit()
                 cur.close()
@@ -249,8 +281,50 @@ def add_post():
 def generate_blog():
     user_prompt = request.form['blog_prompt']
     api_key = os.getenv("GEMINI_API_KEY")
-    full_prompt = f"..." # Unchanged
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
+
+    # --- UPDATED PROMPT FOR BLOG POSTS ---
+    full_prompt = f"""
+    Act as a "Systems Architect" and a leading expert in business process automation. You are writing for an audience of ambitious entrepreneurs who want to scale their businesses through smart, technology-driven solutions.
+    Your task is to write a minimum 1500-word blog post on the following topic: "{user_prompt}".
+    The blog post must meet the following criteria:
+    - Structure and Content:
+      - Engaging Introduction: Start with a relatable story or a startling statistic to hook the reader.
+      - In-depth Analysis: The body of the post should provide a detailed, step-by-step strategy. Use clear subheadings to break up the text.
+      - Evidence-Based Claims: Back up all claims with links to at least 3-5 external, reputable sources (e.g., industry reports, academic studies, articles from established business publications).
+      - Actionable Advice: The post should be practical and provide the reader with a clear roadmap they can follow.
+      - Strong Conclusion: Summarize the key takeaways and end with a powerful call to action.
+    - Tone: Authoritative, well-researched, and highly credible. The tone should reflect your position as a premium technical consultant.
+    
+    After the blog post, please generate 5 unique LinkedIn posts based on the content of the article. These posts should follow the same structure and guidelines as the previous prompt (hook, value-driven body, CTA, and relevant hashtags).
+    
+    Please provide the full blog post and the 5 LinkedIn posts using the following strict format:
+    <BLOG_TITLE_START>The Blog Title Goes Here<BLOG_TITLE_END>
+    <BLOG_CONTENT_START>
+    The entire blog content, with a minimum of 1500 words, goes here.
+    <BLOG_CONTENT_END>
+    <POST_START>
+    LinkedIn Post 1 content...
+    #hashtag1 #hashtag2
+    <POST_END>
+    <POST_START>
+    LinkedIn Post 2 content...
+    #hashtag3 #hashtag4
+    <POST_END>
+    <POST_START>
+    LinkedIn Post 3 content...
+    #hashtag5 #hashtag6
+    <POST_END>
+    <POST_START>
+    LinkedIn Post 4 content...
+    #hashtag7 #hashtag8
+    <POST_END>
+    <POST_START>
+    LinkedIn Post 5 content...
+    #hashtag9 #hashtag10
+    <POST_END>
+    """
+    
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={api_key}"
     payload = {"contents": [{"parts": [{"text": full_prompt}]}]}
     response = requests.post(url, json=payload)
     if response.status_code == 200:
@@ -270,9 +344,21 @@ def generate_blog():
                     blog_id = cur.fetchone()[0]
                     for post_content in linkedin_posts:
                         if post_content.strip():
+                            # Find the last line that starts with '#' for hashtags
                             parts = post_content.strip().split('\n')
-                            post_text = "\n".join(parts[:-1]).strip()
-                            hashtags = parts[-1].strip()
+                            hashtag_line_index = -1
+                            for i in range(len(parts) - 1, -1, -1):
+                                if parts[i].strip().startswith('#'):
+                                    hashtag_line_index = i
+                                    break
+                            
+                            if hashtag_line_index != -1:
+                                post_text = "\n".join(parts[:hashtag_line_index]).strip()
+                                hashtags = " ".join(parts[hashtag_line_index:]).strip()
+                            else: # Fallback if no hashtags are found
+                                post_text = "\n".join(parts).strip()
+                                hashtags = ""
+
                             cur.execute("INSERT INTO posts (post_text, hashtags, status, blog_post_id, user_id) VALUES (%s, %s, 'draft', %s, %s);", (post_text, hashtags, blog_id, current_user.id))
                     conn.commit()
                     cur.close()
